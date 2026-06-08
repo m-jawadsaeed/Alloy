@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id String @id @default(uuid())
+
+  email String @unique
+
+  password String
+
+  role Role @default(USER)
+
+  refreshToken String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  tasks Task[]
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+model Task {
+  id String @id @default(uuid())
+
+  title String
+
+  description String?
+
+  status TaskStatus @default(TODO)
+
+  userId String
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Message {
+  id          String   @id @default(uuid())
+
+  content     String
+
+  senderId    String
+
+  receiverId  String?
+
+  roomId      String?
+
+  createdAt   DateTime @default(now())
+
+  updatedAt   DateTime @updatedAt
+}
