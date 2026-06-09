@@ -1,25 +1,44 @@
-import { ButtonHTMLAttributes } from "react";
+import type {
+  ButtonHTMLAttributes,
+  ReactNode,
+} from "react";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps
+  extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
+  children: ReactNode;
 }
 
-export default function Button({ children, loading, ...props }: ButtonProps) {
+export default function Button({
+  loading,
+  children,
+  className = "",
+  ...props
+}: ButtonProps) {
   return (
     <button
-      {...props}
-      disabled={loading || props.disabled}
-      className="
+      disabled={loading}
+      className={`
+        flex
+        items-center
+        justify-center
         rounded-xl
-        bg-black
-        px-4
+        bg-indigo-600
+        px-5
         py-3
+        font-medium
         text-white
         transition
-        disabled:opacity-50
-      "
+        hover:bg-indigo-700
+        disabled:cursor-not-allowed
+        disabled:opacity-60
+        ${className}
+      `}
+      {...props}
     >
-      {loading ? "Loading..." : children}
+      {loading
+        ? "Please wait..."
+        : children}
     </button>
   );
 }

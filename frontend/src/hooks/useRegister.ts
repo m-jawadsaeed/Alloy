@@ -1,25 +1,19 @@
+import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { authService } from "../services/auth.service";
+import { useAuthStore } from "../store/auth.store";
 
-import { authService } from "@/services/auth.service";
-import { useAuthStore } from "@/store/auth.store";
-
-import type { RegisterPayload } from "@/types/auth.types";
-
-export function useRegister() {
-  const setUser = useAuthStore((state) => state.setUser);
+export const useRegister = () => {
+  const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   return useMutation({
-    mutationFn: (payload: RegisterPayload) => authService.register(payload),
+    mutationFn: authService.register,
 
-    onSuccess: (response) => {
-      setUser(response.user);
+    onSuccess: (data) => {
+      setAuth(data.user, data.accessToken);
 
-      toast.success("Registration successful");
-    },
-
-    onError: () => {
-      toast.error("Registration failed");
+      navigate("/dashboard");
     },
   });
-}
+};
