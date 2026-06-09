@@ -8,14 +8,18 @@ interface Props {
 
 export function StatsCard({ title, value, icon }: Props) {
   return (
-    <div className="rounded-xl border bg-card p-5 shadow-sm">
+    <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-slate-900">
       <div className="flex items-center justify-between">
-        <span className="text-muted-foreground text-sm">{title}</span>
+        <div>
+          <p className="text-sm text-slate-500">{title}</p>
 
-        {icon}
+          <h2 className="mt-2 text-3xl font-bold">{value}</h2>
+        </div>
+
+        <div className="rounded-xl bg-slate-100 p-3 dark:bg-slate-800">
+          {icon}
+        </div>
       </div>
-
-      <h2 className="mt-4 text-3xl font-bold">{value}</h2>
     </div>
   );
 }

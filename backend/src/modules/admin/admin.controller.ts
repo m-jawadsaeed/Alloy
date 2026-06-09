@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-
 import { AdminService } from "./admin.service";
 
 export class AdminController {
@@ -8,7 +7,15 @@ export class AdminController {
 
     return res.json({
       success: true,
+      data,
+    });
+  }
 
+  static async users(_req: Request, res: Response) {
+    const data = await AdminService.getUsers();
+
+    return res.json({
+      success: true,
       data,
     });
   }

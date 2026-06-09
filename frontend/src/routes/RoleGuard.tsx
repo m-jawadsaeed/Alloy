@@ -2,23 +2,19 @@ import { Navigate, Outlet } from "react-router-dom";
 
 import { useAuthStore } from "@/store/auth.store";
 
-import type { UserRole } from "@/types/auth.types";
-
 interface RoleGuardProps {
-  allowedRoles: UserRole[];
+  roles: string[];
 }
 
-export default function RoleGuard({ allowedRoles }: RoleGuardProps) {
+export function RoleGuard({ roles }: RoleGuardProps) {
   const user = useAuthStore((state) => state.user);
 
   if (!user) {
-    return <Navigate replace to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
-  const hasPermission = allowedRoles.includes(user.role);
-
-  if (!hasPermission) {
-    return <Navigate replace to="/dashboard" />;
+  if (!roles.includes(user.role)) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;

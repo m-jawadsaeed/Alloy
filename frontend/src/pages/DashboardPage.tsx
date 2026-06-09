@@ -1,38 +1,48 @@
 import { Activity, CheckCircle, Clock, MessageCircle } from "lucide-react";
 
-import { DashboardHeader } from "src/components/dashboard/DashboardHeader";
 import { StatsCard } from "@/components/dashboard/StatusCard";
-import { RecentTasks } from "src/components/dashboard/RecentTasks";
-import { RecentChats } from "src/components/dashboard/RecentChats";
-import { OnlineUsers } from "src/components/dashboard/OnlineUsers";
-import { ActivityFeed } from "src/components/dashboard/ActivityFeed";
-import { AnalyticsChart } from "src/components/dashboard/AnalyticsChart";
+
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 
 export default function DashboardPage() {
+  const { data, isLoading } = useDashboardStats();
+
+  if (isLoading) {
+    return <div>Loading Dashboard...</div>;
+  }
+
   return (
     <div className="space-y-6">
-      <DashboardHeader />
+      <div>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatsCard title="Total Tasks" value="128" icon={<Activity />} />
+        <p className="text-slate-500">Welcome back</p>
+      </div>
 
-        <StatsCard title="Completed" value="89" icon={<CheckCircle />} />
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <StatsCard
+          title="Total Tasks"
+          value={String(data?.totalTasks ?? 0)}
+          icon={<Activity />}
+        />
 
-        <StatsCard title="In Progress" value="21" icon={<Clock />} />
+        <StatsCard
+          title="Completed Tasks"
+          value={String(data?.completedTasks ?? 0)}
+          icon={<CheckCircle />}
+        />
 
-        <StatsCard title="Messages" value="356" icon={<MessageCircle />} />
-      </section>
+        <StatsCard
+          title="In Progress"
+          value={String(data?.inProgressTasks ?? 0)}
+          icon={<Clock />}
+        />
 
-      <AnalyticsChart />
-
-      <section className="grid gap-6 xl:grid-cols-2">
-        <RecentTasks />
-        <RecentChats />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-2">
-        <OnlineUsers />
-        <ActivityFeed />
+        <StatsCard
+          title="Messages"
+          value={String(data?.totalMessages ?? 0)}
+          icon={<MessageCircle />}
+        />
       </section>
     </div>
   );
