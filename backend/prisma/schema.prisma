@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -13,21 +13,33 @@ enum Role {
 }
 
 model User {
-  id String @id @default(uuid())
-
-  email String @unique
-
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
   password String
+  avatar   String?
 
   role Role @default(USER)
 
   refreshToken String?
 
-  createdAt DateTime @default(now())
+  notificationEnabled Boolean @default(true)
+  darkMode            Boolean @default(false)
+  soundEnabled        Boolean @default(true)
 
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   tasks Task[]
+
+  sentMessages     Message[] @relation("MessageSender")
+  receivedMessages Message[] @relation("MessageReceiver")
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 enum TaskStatus {
@@ -37,35 +49,57 @@ enum TaskStatus {
 }
 
 model Task {
-  id String @id @default(uuid())
-
-  title String
-
+  id          String  @id @default(uuid())
+  title       String
   description String?
 
-  status TaskStatus @default(TODO)
+  status   TaskStatus   @default(TODO)
+  priority TaskPriority @default(MEDIUM)
 
   userId String
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
-
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
 }
 
 model Message {
-  id          String   @id @default(uuid())
+  id      String @id @default(uuid())
+  content String
 
-  content     String
+  read Boolean @default(false)
 
-  senderId    String
+  senderId   String
+  receiverId String?
+  roomId     String?
 
-  receiverId  String?
+  sender   User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User?     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  room     ChatRoom? @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  roomId      String?
+  createdAt DateTime @default(now())
+}
 
-  createdAt   DateTime @default(now())
+model ChatRoom {
+  id   String @id @default(uuid())
+  name String
 
-  updatedAt   DateTime @updatedAt
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CanvasBoard {
+  id String @id @default(uuid())
+
+  name String
+
+  data Json?
+
+  thumbnail String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

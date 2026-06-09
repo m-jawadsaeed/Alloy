@@ -1,27 +1,40 @@
-import { prisma } from "../../config/prisma";
+import {prisma} from "../../config/prisma";
+
+interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string;
+}
 
 export class AuthRepository {
   static findUserByEmail(email: string) {
     return prisma.user.findUnique({
-      where: { email },
+      where: {
+        email,
+      },
     });
   }
 
   static findUserById(id: string) {
     return prisma.user.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
     });
   }
 
-  static createUser(data: { email: string; password: string }) {
+  static createUser(data: CreateUserInput) {
     return prisma.user.create({
       data,
     });
   }
 
-  static updateRefreshToken(id: string, refreshToken: string | null) {
+  static updateRefreshToken(userId: string, refreshToken: string | null) {
     return prisma.user.update({
-      where: { id },
+      where: {
+        id: userId,
+      },
+
       data: {
         refreshToken,
       },

@@ -1,48 +1,35 @@
-import { Request, Response, NextFunction } from "express";
-
+import { Request, Response } from "express";
+import { TaskQuery } from "../task/task.types";
 import { MessageService } from "./message.service";
 
 export class MessageController {
-  static async getRoomMessages(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) {
-    try {
-      
-      const roomId = String(req.params.roomId);
-      const messages = await MessageService.getRoomMessages(roomId);
+  static async privateHistory(req: Request, res: Response) {
+    const messages = await MessageService.getPrivateMessages(
+      req.user!.userId,
+      String(req.params.userId),
+    );
 
-      res.status(200).json({
-        success: true,
-        data: messages,
-      });
-    } catch (error) {
-      next(error);
-    }
+    return res.json({
+      success: true,
+      data: messages,
+    });
   }
 
-  static async getPrivateMessages(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) {
-    try {
-      const userId = String(req.user?.userId);
+  static async roomHistory(req: Request, res: Response) {
+    const messages = await MessageService.getRoomMessages(String(req.params.roomId));
 
-      const otherUserId = String(req.params.userId);
+    return res.json({
+      success: true,
+      data: messages,
+    });
+  }
 
-      const messages = await MessageService.getPrivateMessages(
-        userId,
-        otherUserId,
-      );
+  static async markAsRead(req: Request, res: Response) {
+    const message = await MessageService.markAsRead(String(req.params.messageId));
 
-      res.status(200).json({
-        success: true,
-        data: messages,
-      });
-    } catch (error) {
-      next(error);
-    }
+    return res.json({
+      success: true,
+      data: message,
+    });
   }
 }

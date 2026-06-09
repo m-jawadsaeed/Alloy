@@ -1,32 +1,23 @@
 import { z } from "zod";
 
-export const createTaskSchema =
-  z.object({
-    body: z.object({
-      title: z
-        .string()
-        .min(3)
-        .max(100),
+export const createTaskSchema = z.object({
+  body: z.object({
+    title: z.string().min(3),
 
-      description:
-        z.string().optional()
-    })
-  });
+    description: z.string().optional(),
 
-export const updateTaskSchema =
-  z.object({
-    body: z.object({
-      title:
-        z.string().optional(),
+    priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
+  }),
+});
 
-      description:
-        z.string().optional(),
+export const updateTaskSchema = z.object({
+  body: z.object({
+    title: z.string().min(3).optional(),
 
-      status:
-        z.enum([
-          "TODO",
-          "IN_PROGRESS",
-          "DONE"
-        ]).optional()
-    })
-  });
+    description: z.string().optional(),
+
+    status: z.enum(["TODO", "IN_PROGRESS", "DONE"]).optional(),
+
+    priority: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
+  }),
+});

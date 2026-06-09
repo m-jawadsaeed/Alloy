@@ -1,21 +1,24 @@
-import { prisma } from "../../config/prisma";
+import {prisma} from "../../config/prisma";
 
 export class TaskRepository {
-  static create(data: any) {
+  static create(data: {
+    title: string;
+
+    description?: string;
+
+    priority: "LOW" | "MEDIUM" | "HIGH";
+
+    userId: string;
+  }) {
     return prisma.task.create({
       data,
     });
   }
 
-  static findById(id: string) {
-    return prisma.task.findUnique({
-      where: { id },
-    });
-  }
-
-  static update(id: string, data: any) {
+  static update(id: string, data: Record<string, unknown>) {
     return prisma.task.update({
       where: { id },
+
       data,
     });
   }
@@ -26,32 +29,78 @@ export class TaskRepository {
     });
   }
 
-  static findMany(userId: string, skip: number, take: number, search?: string) {
-    return prisma.task.findMany({
-      where: {
-        userId,
-
-        title: search
-          ? {
-              contains: search,
-              mode: "insensitive",
-            }
-          : undefined,
-      },
-
-      skip,
-
-      take,
-
-      orderBy: {
-        createdAt: "desc",
-      },
+  static findById(id: string) {
+    return prisma.task.findUnique({
+      where: { id },
     });
   }
 
-  static count(userId: string) {
-    return prisma.task.count({
-      where: { userId },
-    });
+  static async findMany(params: {
+    userId: string;
+
+    search?: string;
+
+    status?: string;
+
+    priority?: string;
+
+    page: number;
+
+    limit: number;
+  }) {
+    const { userId, search, status, priority, page, limit } = params;
+
+    const where = {
+      userId,
+
+      ...(search && {
+        OR: [
+          {
+            title: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            description: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        ],
+      }),
+
+      ...(status && {
+        status,
+      }),
+
+      ...(priority && {
+        priority,
+      }),
+    };
+
+    const [tasks, total] = await Promise.all([
+      prisma.task.findMany({
+        where,
+
+        skip: (page - 1) * limit,
+
+        take: limit,
+
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+
+      prisma.task.count({
+        where,
+      }),
+    ]);
+
+    return {
+      tasks,
+
+      total,
+    };
   }
 }

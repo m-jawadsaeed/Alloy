@@ -1,15 +1,45 @@
-import { Request } from "express";
-
-import { Response } from "express";
+import { Request, Response } from "express";
 
 import { DashboardService } from "./dashboard.service";
 
-import { successResponse } from "../../shared/utils/response";
-
 export class DashboardController {
-  static stats = async (req: Request, res: Response) => {
-    const stats = await DashboardService.stats(req.user!.userId);
+  static async stats(req: Request, res: Response) {
+    const data = await DashboardService.stats(req.user!.userId);
 
-    return successResponse(res, 200, "Dashboard stats", stats);
-  };
+    return res.json({
+      success: true,
+
+      data,
+    });
+  }
+
+  static async activity(req: Request, res: Response) {
+    const data = await DashboardService.activity(req.user!.userId);
+
+    return res.json({
+      success: true,
+
+      data,
+    });
+  }
+
+  static async recentTasks(req: Request, res: Response) {
+    const data = await DashboardService.recentTasks(req.user!.userId);
+
+    return res.json({
+      success: true,
+
+      data,
+    });
+  }
+
+  static async recentMessages(req: Request, res: Response) {
+    const data = await DashboardService.recentMessages(req.user!.userId);
+
+    return res.json({
+      success: true,
+
+      data,
+    });
+  }
 }

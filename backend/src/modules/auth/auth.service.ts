@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 import { AuthRepository } from "./auth.repository";
 
@@ -9,14 +10,23 @@ import {
   createRefreshToken,
 } from "../../shared/utils/token";
 
-import jwt from "jsonwebtoken";
 import { env } from "../../config/env";
 
+interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+}
+
+interface LoginPayload {
+  email: string;
+  password: string;
+}
 
 export class AuthService {
-  // REGISTER USER
+  // REGISTER
 
-  static async register(payload: { email: string; password: string }) {
+  static async register(payload: RegisterPayload) {
     const existingUser = await AuthRepository.findUserByEmail(payload.email);
 
     if (existingUser) {
@@ -26,12 +36,16 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(payload.password, 10);
 
     const user = await AuthRepository.createUser({
+      name: payload.name,
+
       email: payload.email,
+
       password: hashedPassword,
     });
 
     const accessToken = createAccessToken({
       userId: user.id,
+
       role: user.role,
     });
 
@@ -42,34 +56,40 @@ export class AuthService {
     return {
       user: {
         id: user.id,
+
+        name: user.name,
+
         email: user.email,
+
         role: user.role,
+
+        avatar: user.avatar,
       },
+
       accessToken,
+
       refreshToken,
     };
   }
 
-  //  LOGIN USER
+  // LOGIN
 
-  static async login(payload: { email: string; password: string }) {
+  static async login(payload: LoginPayload) {
     const user = await AuthRepository.findUserByEmail(payload.email);
 
     if (!user) {
       throw new AppError(401, "Invalid credentials");
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      payload.password,
-      user.password,
-    );
+    const validPassword = await bcrypt.compare(payload.password, user.password);
 
-    if (!isPasswordValid) {
+    if (!validPassword) {
       throw new AppError(401, "Invalid credentials");
     }
 
     const accessToken = createAccessToken({
       userId: user.id,
+
       role: user.role,
     });
 
@@ -80,15 +100,23 @@ export class AuthService {
     return {
       user: {
         id: user.id,
+
+        name: user.name,
+
         email: user.email,
+
         role: user.role,
+
+        avatar: user.avatar,
       },
+
       accessToken,
+
       refreshToken,
     };
   }
 
-  // REFRESH TOKEN (ROTATION + SECURITY)
+  // REFRESH TOKEN
 
   static async refreshToken(userId: string, token: string) {
     const user = await AuthRepository.findUserById(userId);
@@ -97,35 +125,30 @@ export class AuthService {
       throw new AppError(401, "User not found");
     }
 
-    // Token reuse detection
     if (user.refreshToken !== token) {
       await AuthRepository.updateRefreshToken(user.id, null);
 
-      throw new AppError(401, "Refresh token reuse detected. Logged out.");
+      throw new AppError(401, "Refresh token reuse detected");
     }
 
-    const newAccessToken = createAccessToken({
+    const accessToken = createAccessToken({
       userId: user.id,
+
       role: user.role,
     });
 
-    const newRefreshToken = createRefreshToken(user.id);
+    const refreshToken = createRefreshToken(user.id);
 
-    await AuthRepository.updateRefreshToken(user.id, newRefreshToken);
+    await AuthRepository.updateRefreshToken(user.id, refreshToken);
 
     return {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
+      accessToken,
+
+      refreshToken,
     };
   }
 
-  //LOGOUT
-
-  static async logout(userId: string) {
-    await AuthRepository.updateRefreshToken(userId, null);
-
-    return true;
-  }
+  // REFRESH
 
   static async refresh(token: string) {
     if (!token) {
@@ -137,5 +160,13 @@ export class AuthService {
     };
 
     return this.refreshToken(decoded.userId, token);
+  }
+
+  // LOGOUT
+
+  static async logout(userId: string) {
+    await AuthRepository.updateRefreshToken(userId, null);
+
+    return true;
   }
 }

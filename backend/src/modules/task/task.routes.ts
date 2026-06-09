@@ -6,21 +6,21 @@ import { validate } from "../../middleware/validate.middleware";
 
 import { createTaskSchema, updateTaskSchema } from "./task.schema";
 
-import { asyncHandler } from "../../shared/utils/asyncHandler";
-
 import { TaskController } from "./task.controller";
+
+import { asyncHandler } from "../../shared/utils/asyncHandler";
 
 const router = Router();
 
 router.use(authenticate);
+
+router.get("/", asyncHandler(TaskController.getTasks));
 
 router.post(
   "/",
   validate(createTaskSchema),
   asyncHandler(TaskController.createTask),
 );
-
-router.get("/", asyncHandler(TaskController.getTasks));
 
 router.patch(
   "/:id",

@@ -2,25 +2,35 @@ import { Request, Response } from "express";
 
 import { AuthService } from "./auth.service";
 
+import { env } from "../../config/env";
+
 export class AuthController {
   static async register(req: Request, res: Response) {
-    const { email, password } = req.body;
+    const { name, email, password } = req.body;
 
     const result = await AuthService.register({
+      name,
+
       email,
+
       password,
     });
 
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
-      sameSite: "strict",
-      secure: false,
+
+      sameSite: env.NODE_ENV === "production" ? "none" : "strict",
+
+      secure: env.NODE_ENV === "production",
+
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(201).json({
       success: true,
+
       accessToken: result.accessToken,
+
       user: result.user,
     });
   }
@@ -30,19 +40,25 @@ export class AuthController {
 
     const result = await AuthService.login({
       email,
+
       password,
     });
 
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
-      sameSite: "strict",
-      secure: false,
+
+      sameSite: env.NODE_ENV === "production" ? "none" : "strict",
+
+      secure: env.NODE_ENV === "production",
+
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.json({
       success: true,
+
       accessToken: result.accessToken,
+
       user: result.user,
     });
   }
@@ -54,12 +70,15 @@ export class AuthController {
 
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
-      sameSite: "strict",
-      secure: false,
+
+      sameSite: env.NODE_ENV === "production" ? "none" : "strict",
+
+      secure: env.NODE_ENV === "production",
     });
 
     return res.json({
       success: true,
+
       accessToken: result.accessToken,
     });
   }

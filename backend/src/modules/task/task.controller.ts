@@ -1,42 +1,46 @@
-import { Request } from "express";
-
-import { Response } from "express";
-
+import { Request, Response } from "express";
 import { TaskService } from "./task.service";
 
-import { successResponse } from "../../shared/utils/response";
-
 export class TaskController {
-  static createTask = async (req: Request, res: Response) => {
-    const task = await TaskService.createTask(req.user!.userId, req.body);
+  static async getTasks(req: Request, res: Response) {
+    const result = await TaskService.getTasks(req.user!.userId, req.query);
 
-    return successResponse(res, 201, "Task created", task);
-  };
+    return res.json({
+      success: true,
 
-  static getTasks = async (req: Request, res: Response) => {
-    const result = await TaskService.getTasks(
-      req.user!.userId,
-      Number(req.query.page) || 1,
-      Number(req.query.limit) || 10,
-      String(req.query.search || ""),
-    );
+      ...result,
+    });
+  }
 
-    return successResponse(res, 200, "Tasks fetched", result);
-  };
+  static async createTask(req: Request, res: Response) {
+    const task = await TaskService.createTask({
+      ...req.body,
 
-  static updateTask = async (req: Request, res: Response) => {
-    const task = await TaskService.updateTask(
-      String(req.params.id),
-      req.user!.userId,
-      req.body,
-    );
+      userId: req.user!.userId,
+    });
 
-    return successResponse(res, 200, "Task updated", task);
-  };
+    return res.status(201).json({
+      success: true,
 
-  static deleteTask = async (req: Request, res: Response) => {
-    await TaskService.deleteTask(String(req.params.id), req.user!.userId);
+      task,
+    });
+  }
 
-    return successResponse(res, 200, "Task deleted");
-  };
+  static async updateTask(req: Request, res: Response) {
+    const task = await TaskService.updateTask(String(req.params.id), req.body);
+
+    return res.json({
+      success: true,
+
+      task,
+    });
+  }
+
+  static async deleteTask(req: Request, res: Response) {
+    await TaskService.deleteTask(String(req.params.id));
+
+    return res.json({
+      success: true,
+    });
+  }
 }

@@ -7,20 +7,25 @@ import { setIO } from "./emitter";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { redis } from "../config/redis";
 import { logger } from "../shared/logger/logger";
+import { MessageRepository } from "../modules/message/message.repository";
 
-interface SocketUser {
+export interface SocketUser {
   userId: string;
   role: string;
 }
 
-interface PrivateMessagePayload {
+export interface PrivateMessagePayload {
   to: string;
   message: string;
 }
 
-interface GroupMessagePayload {
+export interface GroupMessagePayload {
   roomId: string;
   message: string;
+}
+
+export interface TypingPayload {
+  roomId: string;
 }
 
 export const initSocket = (server: http.Server) => {
@@ -126,16 +131,15 @@ export const initSocket = (server: http.Server) => {
             return;
           }
 
-          io.to(to).emit("private:message", {
-            from: userId,
-            message,
-            createdAt: new Date(),
+          const savedMessage = await MessageRepository.createPrivate({
+            content: message,
+            senderId: userId,
+            receiverId: to,
           });
 
-          /**
-           * Later:
-           * await MessageRepository.create(...)
-           */
+          io.to(to).emit("private:message", savedMessage);
+
+          socket.emit("private:message", savedMessage);
         } catch (error) {
           logger.error(error);
         }
@@ -152,17 +156,15 @@ export const initSocket = (server: http.Server) => {
             return;
           }
 
-          io.to(roomId).emit("group:message", {
-            from: userId,
+          const savedMessage = await MessageRepository.createGroup({
+            content: message,
+
+            senderId: userId,
+
             roomId,
-            message,
-            createdAt: new Date(),
           });
 
-          /**
-           * Later:
-           * await MessageRepository.create(...)
-           */
+          io.to(roomId).emit("group:message", savedMessage);
         } catch (error) {
           logger.error(error);
         }
@@ -171,23 +173,22 @@ export const initSocket = (server: http.Server) => {
       /**
        * Canvas Sync
        */
-      socket.on("canvas:draw", (data) => {
-        try {
-          socket.broadcast.emit("canvas:draw", data);
-        } catch (error) {
-          logger.error(error);
-        }
+      socket.on("canvas:draw", ({ boardId, data }) => {
+        socket.to(boardId).emit("canvas:draw", data);
       });
 
+      socket.on("canvas:join", (boardId: string) => {
+        socket.join(boardId);
+      });
+
+      socket.on("canvas:leave", (boardId: string) => {
+        socket.leave(boardId);
+      });
       /**
        * Canvas Clear
        */
-      socket.on("canvas:clear", () => {
-        try {
-          io.emit("canvas:clear");
-        } catch (error) {
-          logger.error(error);
-        }
+      socket.on("canvas:clear", (boardId: string) => {
+        io.to(boardId).emit("canvas:clear");
       });
 
       /**

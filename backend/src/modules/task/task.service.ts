@@ -1,76 +1,82 @@
-import { AppError } from "../../shared/errors/AppError";
-
 import { TaskRepository } from "./task.repository";
 
+import { AppError } from "../../shared/errors/AppError";
+
 export class TaskService {
-  static async createTask(
+  static async getTasks(
     userId: string,
-    payload: {
-      title: string;
-      description?: string;
+    query: {
+      search?: string;
+
+      status?: string;
+
+      priority?: string;
+
+      page?: number;
+
+      limit?: number;
     },
   ) {
-    return TaskRepository.create({
-      ...payload,
+    const page = Number(query.page) || 1;
+
+    const limit = Number(query.limit) || 10;
+
+    const result = await TaskRepository.findMany({
       userId,
+
+      search: query.search,
+
+      status: query.status,
+
+      priority: query.priority,
+
+      page,
+
+      limit,
     });
+
+    return {
+      tasks: result.tasks,
+
+      total: result.total,
+
+      page,
+
+      limit,
+
+      totalPages: Math.ceil(result.total / limit),
+    };
   }
 
-  static async getTask(taskId: string) {
+  static async createTask(payload: {
+    title: string;
+
+    description?: string;
+
+    priority: "LOW" | "MEDIUM" | "HIGH";
+
+    userId: string;
+  }) {
+    return TaskRepository.create(payload);
+  }
+
+  static async updateTask(taskId: string, data: Record<string, unknown>) {
     const task = await TaskRepository.findById(taskId);
 
     if (!task) {
       throw new AppError(404, "Task not found");
     }
 
-    return task;
+    return TaskRepository.update(taskId, data);
   }
 
-  static async updateTask(taskId: string, userId: string, payload: any) {
+  static async deleteTask(taskId: string) {
     const task = await TaskRepository.findById(taskId);
 
     if (!task) {
       throw new AppError(404, "Task not found");
-    }
-
-    if (task.userId !== userId) {
-      throw new AppError(403, "Forbidden");
-    }
-
-    return TaskRepository.update(taskId, payload);
-  }
-
-  static async deleteTask(taskId: string, userId: string) {
-    const task = await TaskRepository.findById(taskId);
-
-    if (!task) {
-      throw new AppError(404, "Task not found");
-    }
-
-    if (task.userId !== userId) {
-      throw new AppError(403, "Forbidden");
     }
 
     return TaskRepository.delete(taskId);
-  }
-
-  static async getTasks(userId: string, page = 1, limit = 10, search = "") {
-    const skip = (page - 1) * limit;
-
-    const [tasks, total] = await Promise.all([
-      TaskRepository.findMany(userId, skip, limit, search),
-
-      TaskRepository.count(userId),
-    ]);
-
-    return {
-      tasks,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    };
   }
 }

@@ -1,17 +1,19 @@
 import { Router } from "express";
 
-import { MessageController } from "./message.controller";
-
 import { authenticate } from "../../middleware/auth.middleware";
+
+import { asyncHandler } from "../../shared/utils/asyncHandler";
+
+import { MessageController } from "./message.controller";
 
 const router = Router();
 
-router.get("/room/:roomId", authenticate, MessageController.getRoomMessages);
+router.use(authenticate);
 
-router.get(
-  "/private/:userId",
-  authenticate,
-  MessageController.getPrivateMessages,
-);
+router.get("/private/:userId", asyncHandler(MessageController.privateHistory));
 
-export const messageRoutes = router;
+router.get("/room/:roomId", asyncHandler(MessageController.roomHistory));
+
+router.patch("/read/:messageId", asyncHandler(MessageController.markAsRead));
+
+export { router as messageRoutes };
