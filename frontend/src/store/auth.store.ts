@@ -1,15 +1,17 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type { User } from "@/types/auth.types";
+interface User {
+  id: string;
+  email: string;
+  role: string;
+}
 
 interface AuthState {
   user: User | null;
+  accessToken: string | null;
 
-  isAuthenticated: boolean;
-
-  setUser: (user: User | null) => void;
-
+  setAuth: (user: User, token: string) => void;
   logout: () => void;
 }
 
@@ -17,23 +19,22 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
+      accessToken: null,
 
-      isAuthenticated: false,
-
-      setUser: (user) =>
+      setAuth: (user, token) =>
         set({
           user,
-          isAuthenticated: !!user,
+          accessToken: token,
         }),
 
       logout: () =>
         set({
           user: null,
-          isAuthenticated: false,
+          accessToken: null,
         }),
     }),
     {
-      name: "taskflow-auth",
+      name: "auth-storage",
     },
   ),
 );

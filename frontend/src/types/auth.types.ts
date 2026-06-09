@@ -25,10 +25,12 @@ export interface RegisterPayload {
 export interface AuthResponse {
   success: boolean;
   message: string;
+  accessToken: string;
   user: User;
 }
 
 export interface RefreshResponse {
   success: boolean;
   user: User;
+  accessToken: string;
 }
