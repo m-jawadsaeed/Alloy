@@ -1,22 +1,21 @@
+import { ReactNode } from "react";
+
 interface Props {
   title: string;
-  value: number | string;
+  value: string;
+  icon: ReactNode;
 }
 
-export default function StatsCard({ title, value }: Props) {
+export function StatsCard({ title, value, icon }: Props) {
   return (
-    <div
-      className="
-      rounded-xl
-      border
-      bg-white
-      p-6
-      shadow-sm
-    "
-    >
-      <p className="text-sm text-zinc-500">{title}</p>
+    <div className="rounded-xl border bg-card p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <span className="text-muted-foreground text-sm">{title}</span>
 
-      <h2 className="mt-2 text-3xl font-bold">{value}</h2>
+        {icon}
+      </div>
+
+      <h2 className="mt-4 text-3xl font-bold">{value}</h2>
     </div>
   );
 }
