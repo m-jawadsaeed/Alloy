@@ -72,7 +72,7 @@ export default function LoginPage() {
 
                 <p className="mt-2 text-slate-400">
                   Login to continue to your
-                  workspace.
+                  workspace
                 </p>
               </div>
 
